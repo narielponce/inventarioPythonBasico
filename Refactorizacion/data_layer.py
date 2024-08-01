@@ -1,8 +1,95 @@
 # data_layer.py
 import sqlite3
 from tkinter import messagebox
+
+def inicializar_bd():
+    conn = sqlite3.connect('deposito.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS marca (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS categoria (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS ubicacion (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS estado (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS articulos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        marca_id INTEGER,
+        modelo TEXT,
+        serial_number TEXT,
+        categoria_id INTEGER,
+        estado_id INTEGER,
+        FOREIGN KEY (marca_id) REFERENCES marca(id),
+        FOREIGN KEY (categoria_id) REFERENCES categoria(id),
+        FOREIGN KEY (estado_id) REFERENCES estado(id)
+    )
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS ingresos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha DATE NOT NULL,
+        articulo_id INTEGER,
+        cantidad INTEGER NOT NULL,
+        ubicacion_id INTEGER,
+        remito TEXT,
+        FOREIGN KEY (articulo_id) REFERENCES articulo(id),
+        FOREIGN KEY (ubicacion_id) REFERENCES ubicacion(id)
+    )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS egresos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha DATE NOT NULL,
+            articulo_id INTEGER,
+            cantidad INTEGER NOT NULL,
+            destino TEXT,
+            FOREIGN KEY (articulo_id) REFERENCES articulo(id)
+        )
+        ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS inventario (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            articulo_id INTEGER,
+            cantidad INTEGER NOT NULL,
+            ubicacion_id INTEGER,
+            FOREIGN KEY (articulo_id) REFERENCES articulo(id),
+            FOREIGN KEY (ubicacion_id) REFERENCES ubicacion(id)
+        )
+        ''')
+
+    conn.commit()
+    conn.close()
+
+url_db = 'deposito.db'
 def obtener_conexion():
-    return sqlite3.connect('deposito.db')
+    return sqlite3.connect(url_db)
 
 def listar_categorias():
     conn = obtener_conexion()
@@ -12,7 +99,7 @@ def listar_categorias():
     conn.close()
     return categorias
 def guardar_categoria(nombre):
-    conn = sqlite3.connect('deposito.db')
+    conn = obtener_conexion()
     cursor = conn.cursor()
     cursor.execute('INSERT INTO categoria (nombre) VALUES (?)', (nombre,))
     conn.commit()
@@ -25,9 +112,8 @@ def listar_estados():
     estados = cursor.fetchall()
     conn.close()
     return estados
-
 def guardar_estado(nombre):
-    conn = sqlite3.connect('deposito.db')
+    conn = obtener_conexion()
     cursor = conn.cursor()
     cursor.execute('INSERT INTO estado (nombre) VALUES (?)', (nombre,))
     conn.commit()
@@ -41,7 +127,7 @@ def listar_marcas():
     conn.close()
     return marcas
 def guardar_marca(nombre):
-    conn = sqlite3.connect('deposito.db')
+    conn = obtener_conexion()
     cursor = conn.cursor()
     cursor.execute('INSERT INTO marca (nombre) VALUES (?)', (nombre,))
     conn.commit()
@@ -67,7 +153,7 @@ def listar_articulos():
     return articulos
 
 def guardar_articulo(nombre, modelo, serial_number, marca_id, categoria_id, estado_id):
-    conn = sqlite3.connect('deposito.db')
+    conn = obtener_conexion()
     cursor = conn.cursor()
     cursor.execute('''
             INSERT INTO articulos (nombre, modelo, serial_number, marca_id, categoria_id, estado_id)
@@ -76,7 +162,7 @@ def guardar_articulo(nombre, modelo, serial_number, marca_id, categoria_id, esta
     conn.commit()
     conn.close()
 def guardar_egreso(fecha, articulo_id, cantidad, destino):
-    conn = sqlite3.connect('deposito.db')
+    conn = obtener_conexion()
     cursor = conn.cursor()
     try:
         cursor.execute("BEGIN TRANSACTION")
@@ -92,7 +178,7 @@ def guardar_egreso(fecha, articulo_id, cantidad, destino):
     finally:
         conn.close()
 def guardar_ingreso(fecha, cantidad, articulo_id, ubicacion_id, num_remito):
-    conn = sqlite3.connect('deposito.db')
+    conn = obtener_conexion()
     cursor = conn.cursor()
     try:
         cursor.execute("BEGIN TRANSACTION")
