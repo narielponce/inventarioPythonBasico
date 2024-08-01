@@ -1,0 +1,1 @@
+SELECT fecha, a.nombre, a.modelo, a.serial_number, cantidad, remito from ingresos i JOIN articulos a ON i.articulo_id = a.id WHERE serial_number LIKE "%9001-5018-00P%"
